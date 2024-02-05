@@ -90,9 +90,9 @@ for byte in cmd_enable:
     send_byte(byte)
 time.sleep(0.2)
 sync_speed(30, 30)
-# time.sleep(3)
-# sync_speed(0, 0)
 time.sleep(3)
-cmd_stop = bytearray([0x01, 0x06, 0x20, 0x0e, 0x00, 0x07, 0xa2, 0x0b])
-for byte in cmd_stop:
-    send_byte(byte)
+sync_speed(0, 0)
+# time.sleep(3)
+# cmd_stop = bytearray([0x01, 0x06, 0x20, 0x0e, 0x00, 0x07, 0xa2, 0x0b])
+# for byte in cmd_stop:
+#     send_byte(byte)
