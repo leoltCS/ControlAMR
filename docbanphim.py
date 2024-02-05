@@ -109,12 +109,12 @@ def Fstop():
     sync_speed(0,0)
 def Enable_motor():
     cmd_enable = bytearray([0x01, 0x06, 0x20, 0x0e, 0x00, 0x08, 0xe2, 0x0f])
-    for byte in cmd_enable:
-        send_byte(byte)
+    send_enable = putc_uart0(cmd_enable)
+    send_enable.start()
 def Idle_motor():
     cmd_stop = bytearray([0x01, 0x06, 0x20, 0x0e, 0x00, 0x07, 0xa2, 0x0b])
-    for byte in cmd_stop:
-        send_byte(byte)
+    send_stop = putc_uart0(cmd_stop)
+    send_stop.start()
 ##################################################################################################
 ##################################################################################################
 def tohex(val,nbits):
@@ -153,9 +153,8 @@ if __name__ == "__main__":
     th = 0
     status = 0
     print(msg)
-    cmd_enable = bytearray([0x01, 0x06, 0x20, 0x0e, 0x00, 0x08, 0xe2, 0x0f])
-    for byte in cmd_enable:
-        send_byte(byte)
+    Enable_motor()
+    print("enable motor")
     while 1:
         key = getKey(key_timeout)
         if key in moveBindings.keys():
@@ -197,14 +196,16 @@ if __name__ == "__main__":
             elif key == "q":
                 print(speed_data(moveBindings[key][0],moveBindings[key][1]))
                 Fstop()
+                print("Stop motor")
             elif key == "e":
                 print(speed_data(moveBindings[key][0],moveBindings[key][1]))
                 Idle_motor()
+                print("Idle motor")
             elif key == "c":
-                # Enable_motor()
-                cmd_enable = bytearray([0x01, 0x06, 0x20, 0x0e, 0x00, 0x08, 0xe2, 0x0f])
-                for byte in cmd_enable:
-                    send_byte(byte)
+                Enable_motor()
+                # cmd_enable = bytearray([0x01, 0x06, 0x20, 0x0e, 0x00, 0x08, 0xe2, 0x0f])
+                # for byte in cmd_enable:
+                #     send_byte(byte)
                 print("enable motor")
             if (status == 14):
                 os.system("clear")
