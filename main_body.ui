@@ -2019,7 +2019,7 @@ QPushButton:hover {
                       </item>
                      </widget>
                     </item>
-                    <item row="5" column="0">
+                    <item row="5" column="0" colspan="2">
                      <widget class="QLabel" name="lb_status_connect_port">
                       <property name="text">
                        <string>...</string>

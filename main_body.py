@@ -803,7 +803,7 @@ class Ui_MainWindow(object):
         self.formLayout_6.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.cbb_baudrate)
         self.lb_status_connect_port = QtWidgets.QLabel(self.frame_comport_2)
         self.lb_status_connect_port.setObjectName("lb_status_connect_port")
-        self.formLayout_6.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.lb_status_connect_port)
+        self.formLayout_6.setWidget(5, QtWidgets.QFormLayout.SpanningRole, self.lb_status_connect_port)
         self.gridLayout.addWidget(self.frame_comport_2, 1, 0, 1, 1)
         self.verticalLayout_5.addWidget(self.frame_setting)
         self.stackedWidget.addWidget(self.form_control)

@@ -197,10 +197,12 @@ class Main_form(QtWidgets.QMainWindow):
         '''#---button mode---#'''
         self.uic.btn_speedmode.clicked.connect(self.speedmode)
         self.uic.btn_positionmode.clicked.connect(self.positionmode)
-        '''#---button test control---#'''
-        self.uic.btn_stopmotor.clicked.connect(self.stop_motor)
-        self.uic.btn_runforward.clicked.connect(self.run_forward)
-        self.uic.btn_runbackward.clicked.connect(self.run_backward)
+        '''#---button control---#'''
+        self.uic.btn_forward.clicked.connect(self.run_forward)
+        self.uic.btn_backward.clicked.connect(self.run_backward)
+        self.uic.btn_left.clicked.connect(self.run_left)
+        self.uic.btn_right.clicked.connect(self.run_right)
+        self.uic.btn_stop.clicked.connect(self.stop_run)
         '''#---button spindle mode---#'''
         self.uic.btn_runspeed.clicked.connect(self.run_speed)
         self.uic.btn_enablemotor.clicked.connect(self.enable_motor)
@@ -303,16 +305,20 @@ class Main_form(QtWidgets.QMainWindow):
         print("speed mode")
     '''####################### Spinde MODE ####################################'''
     def enable_motor(self):
-        self.motors.enable_motor()
-        print("enable motor")  
+        # self.motors.enable_motor()
+        # print("enable motor")  
+        cmd_enable = [0x01, 0x06, 0x20, 0x0e, 0x00, 0x08, 0xe2, 0x0f]
+        send_speed = putc_uart0(self.serial_port, cmd_enable)
+        send_speed.start()
     def idle_motor(self):
-        self.motors.disable_motor()
-        print("idle")  
-    def stop_motor(self):
-        # get_speed = int(self.uic.txt_speed.text())
-        # self.thread[4] = Control_motors_thread(self.motors,get_speed,"stop")
-        # self.thread[4].start()
-        pass
+        # self.motors.disable_motor()
+        # print("idle")
+        # cmd_stop = bytearray([0x01, 0x06, 0x20, 0x0e, 0x00, 0x07, 0xa2, 0x0b])
+        # for byte in cmd_stop:
+        #     send_byte(byte)
+        cmd_stop = [0x01, 0x06, 0x20, 0x0e, 0x00, 0x07, 0xa2, 0x0b]
+        send_speed = putc_uart0(self.serial_port, cmd_stop)
+        send_speed.start()
     '''####################### Control ####################################'''
     def run_forward(self):
         get_speed = int(self.uic.txt_speed.text())
@@ -334,7 +340,7 @@ class Main_form(QtWidgets.QMainWindow):
         L_Speed = get_speed
         R_Speed = 0
         self.sync_speed(L_Speed, R_Speed)
-    def sto_run(self):
+    def stop_run(self):
         # get_speed = int(self.uic.txt_speed.text())
         L_Speed = 0
         R_Speed = 0
@@ -386,6 +392,7 @@ class Main_form(QtWidgets.QMainWindow):
                 self.serial_port = serial.Serial(get_nameport, 115200, timeout=0.1)
                 self.port_open = True
                 # self.read_dataport()
+                self.uic.lb_status_connect_port.setText(f"OK port {com_name}")
             except serial.SerialException:
                 QtWidgets.QMessageBox.warning(self,"Connect Fail!", "Lỗi kết nối Port")
     # def read_dataport(self):
