@@ -1,0 +1,28 @@
+<RCC>
+  <qresource prefix="images">
+    <file>icon/icons8_open_sign_32px.png</file>
+    <file>icon/icons8_ball_point_pen_32px.png</file>
+    <file>icon/icons8_collect_32px_1.png</file>
+    <file>icon/icons8_square_border_32px.png</file>
+    <file>icon/icons8_add_text_32px.png</file>
+    <file>icon/icons8_search_more_32px.png</file>
+    <file>icon/icons8_add_image_32px.png</file>
+    <file>icon/icons8_connected_32px.png</file>
+    <file>icon/icons8_cnc_machine_32px.png</file>
+    <file>icon/icons8_save_32px.png</file>
+    <file>icon/icons8_launch_32px.png</file>
+    <file>icon/icons8_camera_32px.png</file>
+    <file>icon/icons8_settings_32px.png</file>
+    <file>icon/icons8_home_32px.png</file>
+    <file>icon/icons8_home_64px.png</file>
+    <file>icon/icons8_info_32px.png</file>
+    <file>icon/icons8_info_64px.png</file>
+    <file>icon/icons8_settings_64px.png</file>
+    <file>icon/icons8_home_64px.png</file>
+    <file>icon/icons8_menu_32px.png</file>
+    <file>icon/icons8_macos_close_64px.png</file>
+    <file>icon/icons8_maximize_window_64px.png</file>
+    <file>icon/icons8_minimize_window_64px.png</file>
+    <file>icon/icons8_restore_window_64px.png</file>
+  </qresource>
+</RCC>

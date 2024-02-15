@@ -1,0 +1,6 @@
+Pyrcc5 icon_navigation.qrc -o icon_navigation_rc.py
+
+pyuic5 -x main_body.ui -o main_body.py
+
+HD: 560x520
+FULL HD: 880x800
