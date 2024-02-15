@@ -212,9 +212,9 @@ class Main_form(QtWidgets.QMainWindow):
         
         self.show() #show form
         # self.showMaximized()
-        self.connect_driver_zlac8015d()
-        # self.connect_port()
-        self.thread_ticks_encoder()
+        # self.connect_driver_zlac8015d()
+        self.connect_port()
+        # self.thread_ticks_encoder()
         # self.uic.maximum_btn.setIcon(QtGui.QIcon(u":/images/icon/icons8_restore_window_64px.png"))
     ##############################################################################################################################################################################  
     ##############################################################################################################################################################################  
@@ -252,7 +252,7 @@ class Main_form(QtWidgets.QMainWindow):
             hi_ck, lo_ck = lo_hi_bit(ck)
             ibuf.extend([lo_ck, hi_ck])
 
-            send_speed = putc_uart0(ibuf)
+            send_speed = putc_uart0(self.serial_port, ibuf)
             send_speed.start()
             # for byte in ibuf:
             #     print(hex(byte))
@@ -313,7 +313,6 @@ class Main_form(QtWidgets.QMainWindow):
         # self.thread[4] = Control_motors_thread(self.motors,get_speed,"stop")
         # self.thread[4].start()
         pass
-
     '''####################### Control ####################################'''
     def run_forward(self):
         get_speed = int(self.uic.txt_speed.text())
