@@ -125,7 +125,7 @@ def vels(speed, turn):
 def speed_data(linearX, angularZ):
     return "currently:\tspeed %s\tturn %s " % (linearX,angularZ)
 ######################################
-def getKey(key_timeout):
+def getKey(key_timeout=0.0):
     tty.setraw(sys.stdin.fileno())
     rlist, _, _ = select.select([sys.stdin], [], [], key_timeout)
     if rlist:

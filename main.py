@@ -12,7 +12,7 @@ from PyQt5.QtGui import QPixmap, QMouseEvent
 ########################--OS--################################
 # import numpy as np
 # import cv2
-import sys, os, serial, time#, select, termios, tty
+import sys, os, serial, time, select, termios, tty
 from threading import Thread
 # import subprocess
 # import socket
@@ -49,13 +49,24 @@ DriverAddr = 0X01
 #######################################################################
 '''######################### DEF ######################################'''
 #######################################################################
+def getKey(key_timeout=0.0):
+    settings = termios.tcgetattr(sys.stdin)
+    tty.setraw(sys.stdin.fileno())
+    rlist, _, _ = select.select([sys.stdin], [], [], key_timeout)
+    if rlist:
+        key = sys.stdin.read(1)
+    else:
+        key = ''
+    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+    return key
+#######################################################################
 def lo_hi_bit(num):
         # bitwise de lay bit thap bit cao/ tham khao
         lo = num & 0xFF  # Lấy 1byte thấp
         hi = (num >> 8) & 0xFF  # Dịch phải 8 bit để lấy 1byte cao
         return hi, lo
     ######################################
-    # def crc_fn(data):
+    # def get_checksum(data):
     #     return sum(data) % 256
 def crc_fn(dpacket):#tham khao cua a Phát vippro
     crc = 0xffff
@@ -122,6 +133,26 @@ class Control_motors_thread(QThread):
     def stop(self):
         self.terminate()
 #######################################################################
+class encoder_request_data_thread(QThread):
+    signal_L = pyqtSignal(int)
+    signal_R = pyqtSignal(int)
+    def __init__(self, serial):
+        self.serial = serial
+        super(encoder_request_data_thread, self).__init__()
+    def run(self):
+        self.serial.write(b'\x20\xA7\x00\x04')  # Gửi yêu cầu đọc 4 byte từ địa chỉ 0x20A7
+        data = self.serial.read(8)  # Đọc phản hồi 8 byte
+        l_pul_hi = data[2]
+        l_pul_lo = data[3]
+        r_pul_hi = data[4]
+        r_pul_lo = data[5]
+        l_tick = ((l_pul_hi & 0xFF) << 8) | (l_pul_lo & 0xFF)
+        r_tick = ((r_pul_hi & 0xFF) << 8) | (r_pul_lo & 0xFF)
+        self.signal_L.emit(l_tick) 
+        self.signal_R.emit(-r_tick)
+    def stop(self):
+        self.terminate()
+#######################################################################
 class encoder_thread_ticks(QThread):
     signal_L = pyqtSignal(int)
     signal_R = pyqtSignal(int)
@@ -137,6 +168,16 @@ class encoder_thread_ticks(QThread):
             self.signal_R.emit(-r_tick)   
     def stop(self):
         self.terminate()
+#######################################################################
+class KeyboardReaderThread(QThread):
+    signal_key_pressed = pyqtSignal(str)
+    def __init__(self):
+        super(KeyboardReaderThread, self).__init__()
+    def run(self):
+        while True:
+            key = getKey()
+            if key:
+                self.signal_key_pressed.emit(key)
 #######################################################################
 class thread_custom(QThread):
     signal = pyqtSignal(str)
@@ -203,6 +244,7 @@ class Main_form(QtWidgets.QMainWindow):
         self.uic.btn_left.clicked.connect(self.run_left)
         self.uic.btn_right.clicked.connect(self.run_right)
         self.uic.btn_stop.clicked.connect(self.stop_run)
+        self.uic.btn_keypad.clicked.connect(self.start_thread_read_keypad)
         '''#---button spindle mode---#'''
         self.uic.btn_runspeed.clicked.connect(self.run_speed)
         self.uic.btn_enablemotor.clicked.connect(self.enable_motor)
@@ -215,8 +257,10 @@ class Main_form(QtWidgets.QMainWindow):
         self.show() #show form
         # self.showMaximized()
         # self.connect_driver_zlac8015d()
+
         self.connect_port()
-        # self.thread_ticks_encoder()
+
+        self.thread_ticks_encoder()
         # self.uic.maximum_btn.setIcon(QtGui.QIcon(u":/images/icon/icons8_restore_window_64px.png"))
     ##############################################################################################################################################################################  
     ##############################################################################################################################################################################  
@@ -262,7 +306,8 @@ class Main_form(QtWidgets.QMainWindow):
             print("send ok")  
     '''####################### start thread get encoder ####################################'''
     def thread_ticks_encoder(self):
-        self.thread[10] = encoder_thread_ticks(self.motors)
+        # self.thread[10] = encoder_thread_ticks(self.motors)
+        self.thread[10] = encoder_request_data_thread(self.serial_port)
         self.thread[10].start()
         self.thread[10].signal_L.connect(self.left_ticks_encoder)
         self.thread[10].signal_R.connect(self.right_ticks_encoder)
@@ -345,13 +390,45 @@ class Main_form(QtWidgets.QMainWindow):
         L_Speed = 0
         R_Speed = 0
         self.sync_speed(L_Speed, R_Speed)
+    # def start_thread_read_keypad(self):
+    #     self.timer = QTimer(self)
+    #     self.timer.timeout.connect(self.checkKey)
+    #     self.timer.start(10)  # Milliseconds
+    # def checkKey(self):
+    #     key = getKey(0.0)
+    #     if key:
+    #         self.label.setText(f"Pressed key: {key}")
+    def start_thread_read_keypad(self):
+        try:
+            self.thread[2].stop()
+            self.uic.btn_keypad.setText("Keyboard")
+        except:
+            print("Stop Error!")
+            self.thread[2] = KeyboardReaderThread()
+            self.thread[2].start()
+            self.thread[2].signal_key_pressed.connect(self.on_key_pressed)
+            self.uic.btn_keypad.setText("Cls")
+    def on_key_pressed(self, key):
+        print(f"Pressed key: {key}")
+        if key == "w":
+            self.run_forward()
+        elif key == "s":
+            self.run_backward()
+        elif key == "a":
+            self.run_left()
+        elif key == "d":
+            self.run_right()
+        elif key == "q":
+            self.stop_run()
+        elif key == "e":
+            self.enable_motor()
+        elif key == "r":
+            self.idle_motor()
     #######################################################################################
     def run_speed(self):
-        left_RPM = int(self.uic.txt_left.text())
-        right_RPM = int(self.uic.txt_right.text())
-        print(left_RPM)
-        print(right_RPM)
-        self.motors.set_rpm(left_RPM,right_RPM)
+        L_Speed = int(self.uic.txt_left.text())
+        R_Speed = int(self.uic.txt_right.text())
+        self.sync_speed(L_Speed, R_Speed)
         print("run speed")
     #######################################################################################  
     #######################################################################################
