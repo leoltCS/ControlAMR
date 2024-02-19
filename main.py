@@ -140,7 +140,10 @@ class encoder_request_data_thread(QThread):
         self.serial = serial
         super(encoder_request_data_thread, self).__init__()
     def run(self):
-        self.serial.write(b'\x20\xA7\x00\x04')  # Gửi yêu cầu đọc 4 byte từ địa chỉ 0x20A7
+        hexcode = [0x01, 0x03, 0x20, 0xA7, 0x00, 0x04, 0xfe, 0x2a]
+        self.serial.write(serial.to_bytes(hexcode))
+        # time.sleep(0.05)
+        # self.serial.write(b'\x20\xA7\x00\x04')  # Gửi yêu cầu đọc 4 byte từ địa chỉ 0x20A7
         data = self.serial.read(8)  # Đọc phản hồi 8 byte
         l_pul_hi = data[2]
         l_pul_lo = data[3]
@@ -386,10 +389,10 @@ class Main_form(QtWidgets.QMainWindow):
         R_Speed = 0
         self.sync_speed(L_Speed, R_Speed)
     def stop_run(self):
-        # get_speed = int(self.uic.txt_speed.text())
         L_Speed = 0
         R_Speed = 0
         self.sync_speed(L_Speed, R_Speed)
+
     # def start_thread_read_keypad(self):
     #     self.timer = QTimer(self)
     #     self.timer.timeout.connect(self.checkKey)
