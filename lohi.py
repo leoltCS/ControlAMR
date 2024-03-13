@@ -63,12 +63,22 @@ def sync_speed(LSpd, RSpd):
         print(ibuf)
 if __name__ == "__main__":
     print("hi")
-    cmd_stop = bytearray([0x01, 0x03, 0x20, 0x0D, 0x00, 0x01])
+    cmd_stop = bytearray([0x01, 0x03, 0x20, 0xA1, 0x00, 0x02])
     ck = crc_fn(cmd_stop)
+    print(hex(ck))
     hi_ck, lo_ck = lo_hi_bit(ck)
-    cmd_stop.extend([lo_ck, hi_ck])
-    for byte in cmd_stop:
-        print(hex(byte))
+    print(hex(hi_ck))
+    print(hex(lo_ck))
+    cmd_stop.extend([hi_ck, lo_ck])
+    print(cmd_stop)
+    # 20ABh
+    # print("hi")
+    # cmd_stop = bytearray([0x01, 0x03, 0x20, 0x0D, 0x00, 0x01])
+    # ck = crc_fn(cmd_stop)
+    # hi_ck, lo_ck = lo_hi_bit(ck)
+    # cmd_stop.extend([lo_ck, hi_ck])
+    # for byte in cmd_stop:
+    #     print(hex(byte))
     
     # TempL = 30
     # TempR = 30
