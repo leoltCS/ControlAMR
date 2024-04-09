@@ -8,7 +8,8 @@ os.system("cls")
 DriverAddr = 0x01
 # ser = serial.Serial(port='/dev/ttyUSB0',baudrate=115200) 
 def send_byte(byte):
-    ser.write(bytes([byte])) 
+    # ser.write(bytes([byte]))
+    pass 
 
 # def lo_hi_bit(num):
 #     if num < 0:

@@ -99,9 +99,9 @@ class Serial_Reader_Thread_KEYPAD(QThread):
     def run(self):
         while True:
             # data_port = self.Serial.readline().decode().strip()
-            data_port = self.Serial.read(10)
+            data_port = self.Serial.read(3)
             if data_port:
-                print(data_port)
+                # print(data_port)
                 self.signal.emit(data_port)
             time.sleep(0.08)
     def stop(self):
@@ -140,18 +140,19 @@ class encoder_request_data_thread(QThread):
         self.serial = serial
         super(encoder_request_data_thread, self).__init__()
     def run(self):
-        while 1:
-            self.serial.write(b'\x20\xA7\x00\x04')  # Gửi yêu cầu đọc 4 byte từ địa chỉ 0x20A7
-            data = self.serial.read(8)  # Đọc phản hồi 8 byte
-            l_pul_hi = data[2]
-            l_pul_lo = data[3]
-            r_pul_hi = data[4]
-            r_pul_lo = data[5]
-            l_tick = ((l_pul_hi & 0xFF) << 8) | (l_pul_lo & 0xFF)
-            r_tick = ((r_pul_hi & 0xFF) << 8) | (r_pul_lo & 0xFF)
-            self.signal_L.emit(l_tick) 
-            self.signal_R.emit(-r_tick)
-            # time.sleep(0.08)
+        hexcode = [0x01, 0x03, 0x20, 0xA7, 0x00, 0x04, 0xfe, 0x2a]
+        self.serial.write(serial.to_bytes(hexcode))
+        # time.sleep(0.05)
+        # self.serial.write(b'\x20\xA7\x00\x04')  # Gửi yêu cầu đọc 4 byte từ địa chỉ 0x20A7
+        data = self.serial.read(8)  # Đọc phản hồi 8 byte
+        l_pul_hi = data[2]
+        l_pul_lo = data[3]
+        r_pul_hi = data[4]
+        r_pul_lo = data[5]
+        l_tick = ((l_pul_hi & 0xFF) << 8) | (l_pul_lo & 0xFF)
+        r_tick = ((r_pul_hi & 0xFF) << 8) | (r_pul_lo & 0xFF)
+        self.signal_L.emit(l_tick) 
+        self.signal_R.emit(-r_tick)
     def stop(self):
         self.terminate()
 #######################################################################
@@ -259,7 +260,9 @@ class Main_form(QtWidgets.QMainWindow):
         self.show() #show form
         # self.showMaximized()
         # self.connect_driver_zlac8015d()
+
         self.connect_port()
+
         self.thread_ticks_encoder()
         # self.uic.maximum_btn.setIcon(QtGui.QIcon(u":/images/icon/icons8_restore_window_64px.png"))
     ##############################################################################################################################################################################  
@@ -307,11 +310,10 @@ class Main_form(QtWidgets.QMainWindow):
     '''####################### start thread get encoder ####################################'''
     def thread_ticks_encoder(self):
         # self.thread[10] = encoder_thread_ticks(self.motors)
-        # self.thread[10] = encoder_request_data_thread(self.serial_port)
-        self.thread[10] = Serial_Reader_Thread_KEYPAD(self.serial_port)
+        self.thread[10] = encoder_request_data_thread(self.serial_port)
         self.thread[10].start()
-        # self.thread[10].signal_L.connect(self.left_ticks_encoder)
-        # self.thread[10].signal_R.connect(self.right_ticks_encoder)
+        self.thread[10].signal_L.connect(self.left_ticks_encoder)
+        self.thread[10].signal_R.connect(self.right_ticks_encoder)
     '''####################### get encoder ticks ####################################'''
     def left_ticks_encoder(self,leftticks):
         self.uic.txt_endcoder_left.setText(str(leftticks))
@@ -353,8 +355,7 @@ class Main_form(QtWidgets.QMainWindow):
     def enable_motor(self):
         # self.motors.enable_motor()
         # print("enable motor")  
-        # cmd_enable = [0x01, 0x03, 0x20, 0xa1, 0x00, 0x02, 0x9e, 0x29] #do volt
-        cmd_enable = [0x01, 0x06, 0x20, 0x0e, 0x00, 0x08, 0xe2, 0x0f]                                                                                                                                                                                                                                                                                                                                                                                       
+        cmd_enable = [0x01, 0x06, 0x20, 0x0e, 0x00, 0x08, 0xe2, 0x0f]
         send_speed = putc_uart0(self.serial_port, cmd_enable)
         send_speed.start()
     def idle_motor(self):
@@ -388,10 +389,10 @@ class Main_form(QtWidgets.QMainWindow):
         R_Speed = 0
         self.sync_speed(L_Speed, R_Speed)
     def stop_run(self):
-        # get_speed = int(self.uic.txt_speed.text())
         L_Speed = 0
         R_Speed = 0
         self.sync_speed(L_Speed, R_Speed)
+
     # def start_thread_read_keypad(self):
     #     self.timer = QTimer(self)
     #     self.timer.timeout.connect(self.checkKey)
@@ -400,12 +401,6 @@ class Main_form(QtWidgets.QMainWindow):
     #     key = getKey(0.0)
     #     if key:
     #         self.label.setText(f"Pressed key: {key}")
-    def demo_run(self):
-        self.run_forward()
-        time.sleep(3)
-        self.run_backward()
-        time.sleep(3)
-        self.stop_run()
     def start_thread_read_keypad(self):
         try:
             self.thread[2].stop()
@@ -432,8 +427,6 @@ class Main_form(QtWidgets.QMainWindow):
             self.enable_motor()
         elif key == "r":
             self.idle_motor()
-        elif key == "f":
-            self.demo_run()
     #######################################################################################
     def run_speed(self):
         L_Speed = int(self.uic.txt_left.text())
@@ -446,7 +439,7 @@ class Main_form(QtWidgets.QMainWindow):
     def connect_driver_zlac8015d(self):
         # port = self.uic.cbb_nameport.itemText(self.index_port) #"get value from combobox"
         # self.motors = ZLAC8015D.Controller(port)
-        self.motors = ZLAC8015D.Controller(port="/dev/ttyUSB1")
+        self.motors = ZLAC8015D.Controller(port="/dev/ttyUSB0")
     #######################################################################################  
     #######################################################################################
     def get_name_port(self):
